@@ -1,0 +1,30 @@
+# ─────────────────────────────────────────────
+# Core LLM and Agent Orchestration
+# ─────────────────────────────────────────────
+langchain==0.3.25
+langchain-community==0.3.23
+langchain-groq==0.3.2          # Groq as LLM backend (free, fast)
+langgraph==0.4.1               # Multi-agent graph orchestration
+
+# ─────────────────────────────────────────────
+# Vector Database for RAG (Agent 2)
+# ─────────────────────────────────────────────
+chromadb==0.6.3
+
+# ─────────────────────────────────────────────
+# Embeddings (to convert text into vectors)
+# ─────────────────────────────────────────────
+sentence-transformers==3.4.1   # Local embedding model, no API key needed
+
+# ─────────────────────────────────────────────
+# Frontend UI
+# ─────────────────────────────────────────────
+streamlit==1.44.1
+
+# ─────────────────────────────────────────────
+# Utilities
+# ─────────────────────────────────────────────
+python-dotenv==1.1.0           # Loads .env variables into the environment
+pydantic==2.11.3               # Data validation for structured agent outputs
+fastapi==0.115.6
+uvicorn==0.34.0

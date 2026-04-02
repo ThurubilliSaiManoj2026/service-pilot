@@ -1,0 +1,27 @@
+# Python virtual environment
+venv/
+
+# Environment variables — NEVER commit this
+.env
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ChromaDB vector store — rebuilt from incidents.json on first run
+vectorstore/
+
+# Node.js dependencies
+frontend/node_modules/
+
+# Vite production build output
+frontend/dist/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/settings.json
