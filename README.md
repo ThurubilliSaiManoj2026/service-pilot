@@ -568,7 +568,7 @@ actually produces.
 
 B.Tech Computer Science Engineering (AI/ML Specialization)
 
-- LinkedIn: linkedin.com/in/thurubilli-sai-manoj
+- LinkedIn: https://www.linkedin.com/in/thurubilli-sai-manoj-96012b31a
 
 ---
 
