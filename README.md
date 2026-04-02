@@ -58,9 +58,7 @@
 
 ServicePilot is an advanced **Multi-Agent AI system** built to automate the
 complete ITIL (IT Infrastructure Library) incident management lifecycle. It is
-designed to solve a problem that every IT service company like TCS, Accenture, Cognizant — deals with daily: the enormous manual effort required to
-triage incidents, find historical resolution patterns, write Root Cause Analysis
-documents, and prepare Change Advisory Board requests.
+designed to solve a problem that every IT service company like TCS, Accenture, Cognizant — deals with daily: the enormous manual effort required to triage incidents, find historical resolution patterns, write Root Cause Analysis documents, and prepare Change Advisory Board requests.
 
 This project was built as a portfolio-grade demonstration of real-world AI
 engineering — combining LLM orchestration, semantic vector search, REST API
