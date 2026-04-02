@@ -561,17 +561,6 @@ but the resolution agent stored a `dict` (`{"retrieved_incidents": [...],
 importance of keeping the shared state schema synchronized with what each agent
 actually produces.
 
-### Challenge 5: PDF Looking Like a Web UI
-
-**Root cause:** The initial `generatePDF` implementation used green-colored
-headings, gradient fills, and colored table headers — appropriate for a dark-mode
-web application but completely unsuitable for a formal corporate document.
-
-**Solution:** Complete rewrite of `generatePDF` using only Helvetica Bold black
-headings with thin underline rules, Times New Roman black body text, light gray
-table headers, no colors anywhere, and orphan protection for headings
-(35mm minimum space required before a heading is placed on the current page).
-
 ---
 
 ## Author
