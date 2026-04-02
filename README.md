@@ -50,7 +50,6 @@
 - [Knowledge Base](#knowledge-base)
 - [Challenges and Solutions](#challenges-and-solutions)
 - [Author](#author)
-- [License](#license)
 
 ---
 
@@ -567,36 +566,9 @@ actually produces.
 
 **Thurubilli Sai Manoj**
 
-B.Tech Computer Science Engineering (AI/ML Specialization)  
-Woxsen University, Hyderabad — Class of 2026
+B.Tech Computer Science Engineering (AI/ML Specialization)
 
-- GitHub: [@ThurubilliSaiManoj2026](https://github.com/ThurubilliSaiManoj2026)
-- LinkedIn: _(add your LinkedIn URL)_
-
----
-
-## License
-
-Distributed under the MIT License.
-```
-MIT License
-
-Copyright (c) 2026 Thurubilli Sai Manoj
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-```
+- LinkedIn: linkedin.com/in/thurubilli-sai-manoj
 
 ---
 
