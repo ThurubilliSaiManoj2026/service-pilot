@@ -17,7 +17,7 @@
 <p align="center">
   <strong>Multi-Agent ITIL Process Automation System</strong>
   <br />
-  From raw incident description to triage classification, resolution synthesis,
+  From raw incident plain description to triage classification, resolution synthesis,
   RCA report, and CAB change request. 
   Fully automated in under 30 seconds.
   <br />
