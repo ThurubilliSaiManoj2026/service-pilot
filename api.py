@@ -322,14 +322,10 @@ async def analyze_incident(request: IncidentRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    # uvicorn is the ASGI server that runs FastAPI in production.
-    # host="0.0.0.0" makes the server accessible from any network interface,
-    # which is required when running inside Docker or a cloud container.
-    # reload=True enables hot-reloading during development — the server
-    # restarts automatically when you save changes to any Python file.
+    port = int(os.environ.get("PORT", 8000))
     uvicorn.run(
         "api:app",
         host   = "0.0.0.0",
-        port   = 8000,
-        reload = False   # Set to True during development if needed
+        port   = port,
+        reload = False
     )

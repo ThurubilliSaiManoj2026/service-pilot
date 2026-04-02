@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: service-pilot-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python api.py
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+    disk:
+      name: vectorstore
+      mountPath: /opt/render/project/src/vectorstore
+      sizeGB: 1
