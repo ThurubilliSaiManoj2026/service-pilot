@@ -18,7 +18,7 @@
   <strong>Multi-Agent ITIL Process Automation System</strong>
   <br />
   From raw incident description to triage classification, resolution synthesis,
-  RCA report, and CAB change request — fully automated in under 30 seconds.
+  RCA report, and CAB change request. Fully automated in under 30 seconds.
   <br />
   <br />
   <a href="#demo">View Demo</a>
