@@ -49,7 +49,6 @@
 - [Agent Pipeline Details](#agent-pipeline-details)
 - [Knowledge Base](#knowledge-base)
 - [Challenges and Solutions](#challenges-and-solutions)
-- [Future Improvements](#future-improvements)
 - [Author](#author)
 - [License](#license)
 
@@ -115,29 +114,29 @@ reduces this entire lifecycle to **under 30 seconds**.
 
 ## Key Features
 
-- **🎯 Agent 1 — Triage:** Classifies any incident into P1–P4 severity with
+- **Agent 1 — Triage:** Classifies any incident into P1–P4 severity with
   affected service identification, category mapping, business impact analysis,
   initial diagnosis, and resolver team assignment
-- **🔍 Agent 2 — Resolution Suggester:** Performs exhaustive BGE-Base cosine
+- **Agent 2 — Resolution Suggester:** Performs exhaustive BGE-Base cosine
   similarity search across 100 historical incidents, retrieves the top 3 most
   semantically relevant past cases, and synthesizes tailored resolution steps
   using LLaMA 3.3 70B with citation of source incidents
-- **📄 Agent 3 — RCA Generator:** Produces complete Root Cause Analysis
+- **Agent 3 — RCA Generator:** Produces complete Root Cause Analysis
   documents (900+ words) with Executive Summary, Incident Timeline, Five Whys
   causal chain analysis, Impact Assessment, Preventive Measures, Lessons
   Learned, and Action Items Table
-- **📋 Agent 4 — CAB RFC Generator:** Generates formal Change Advisory Board
+- **Agent 4 — CAB RFC Generator:** Generates formal Change Advisory Board
   Request for Change documents with Risk Assessment, Implementation Plan,
   Rollback Procedure, Stakeholder Approval Matrix, and Communication Plan
-- **📥 PDF Export:** Both RCA and CAB documents export as professionally
+- **PDF Export:** Both RCA and CAB documents export as professionally
   formatted PDFs (white background, Helvetica headings, Times Roman body,
   embedded tables) indistinguishable from human-authored reports
-- **💡 ITIL Knowledge Base:** 100 hand-crafted realistic incident records
+- **ITIL Knowledge Base:** 100 hand-crafted realistic incident records
   spanning 10 IT domains (Database, Application, Network, Infrastructure,
   Security, Cloud, DevOps, Data Engineering, ML Platform, Identity)
-- **🌐 REST API:** FastAPI backend with OpenAPI documentation at `/docs`,
+- **REST API:** FastAPI backend with OpenAPI documentation at `/docs`,
   health check endpoint, and examples endpoint
-- **⚡ React Frontend:** Clean white SaaS design with Framer Motion transitions,
+- **React Frontend:** Clean white SaaS design with Framer Motion transitions,
   green/black accent palette, five pre-loaded example incidents, and full
   four-tab results display
 
@@ -187,36 +186,36 @@ reduces this entire lifecycle to **under 30 seconds**.
 ## Architecture
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    React Frontend                        │
-│           (Vite + Tailwind + Framer Motion)              │
-│                   localhost:5173                         │
+│                    React Frontend                       │
+│           (Vite + Tailwind + Framer Motion)             │
+│                   localhost:5173                        │
 └──────────────────────┬──────────────────────────────────┘
                        │ HTTP POST /api/analyze
                        ▼
 ┌─────────────────────────────────────────────────────────┐
-│                   FastAPI Backend                        │
-│                    api.py                                │
-│                   localhost:8000                         │
+│                   FastAPI Backend                       │
+│                    api.py                               │
+│                   localhost:8000                        │
 └──────────────────────┬──────────────────────────────────┘
                        │ run_pipeline(incident_description)
                        ▼
 ┌─────────────────────────────────────────────────────────┐
-│              LangGraph Pipeline (graph.py)               │
-│                                                          │
-│  ┌──────────┐   ┌────────────┐   ┌──────┐   ┌────────┐ │
-│  │ Triage   │──▶│ Resolution │──▶│ RCA  │──▶│  CAB   │ │
-│  │ Agent 1  │   │  Agent 2   │   │Agent3│   │ Agent 4│ │
-│  └──────────┘   └────────────┘   └──────┘   └────────┘ │
-│       │               │                                  │
+│              LangGraph Pipeline (graph.py)              │
+│                                                         │
+│  ┌──────────┐   ┌────────────┐   ┌──────┐   ┌────────┐  │
+│  │ Triage   |──▶│ Resolution │──▶│ RCA  │──▶│  CAB  │  |
+│  │ Agent 1  │   │  Agent 2   │   │Agent3│   │ Agent 4│  │
+│  └──────────┘   └────────────┘   └──────┘   └────────┘  │
+│       │               │                                 │
 │       │         ┌─────▼──────────────┐                  │
 │       │         │   ChromaDB         │                  │
 │       │         │   Vector Store     │                  │
 │       │         │   (100 incidents)  │                  │
 │       │         │   BGE-Base embeds  │                  │
 │       │         └────────────────────┘                  │
-│       │                                                  │
+│       │                                                 │
 │       └──────────────────────────────────────────────▶  │
-│                  ServicePilotState (shared)              │
+│                  ServicePilotState (shared)             │
 │     {incident_description, triage_result,               │
 │      similar_incidents, rca_report, cab_document}       │
 └─────────────────────────────────────────────────────────┘
@@ -518,21 +517,6 @@ Each record contains: `incident_id`, `title`, `description`, `severity`,
 
 ---
 
-## Screenshots
-
-> _Add screenshots after deployment_
-
-| Section | Preview |
-|---|---|
-| Hero Section | _(screenshot)_ |
-| Triage Results | _(screenshot)_ |
-| Similar Incidents with BGE Scores | _(screenshot)_ |
-| RCA Report | _(screenshot)_ |
-| CAB RFC Document | _(screenshot)_ |
-| Downloaded PDF | _(screenshot)_ |
-
----
-
 ## Challenges and Solutions
 
 ### Challenge 1: BGE Embedding Similarity Scores Stuck at 35-50%
@@ -591,30 +575,6 @@ web application but completely unsuitable for a formal corporate document.
 headings with thin underline rules, Times New Roman black body text, light gray
 table headers, no colors anywhere, and orphan protection for headings
 (35mm minimum space required before a heading is placed on the current page).
-
----
-
-## Future Improvements
-
-- [ ] **Real-time streaming responses** — Use FastAPI `StreamingResponse` with
-  Server-Sent Events so the frontend shows each agent completing in real time
-  instead of waiting for the full pipeline
-- [ ] **User authentication** — JWT-based auth so multiple users can save and
-  retrieve their incident history
-- [ ] **Incident history dashboard** — PostgreSQL storage of past pipeline runs
-  with search and filter capabilities
-- [ ] **ServiceNow / Jira integration** — Auto-create incidents in ServiceNow
-  and attach the generated RCA/CAB documents via REST API
-- [ ] **Custom knowledge base upload** — Allow enterprise users to upload their
-  own incident history CSV/JSON to replace the default 100-incident KB
-- [ ] **Model selection** — Allow users to choose between LLaMA 3.3 70B, Gemini
-  1.5 Pro, and GPT-4o for comparison
-- [ ] **Slack / Teams notification** — Push pipeline completion notifications
-  with document summaries to configured Slack channels
-- [ ] **ITIL v4 compliance scoring** — Automatically score the generated
-  documents against ITIL v4 standards and flag gaps
-- [ ] **Kubernetes deployment** — Helm chart for deploying ServicePilot to
-  enterprise Kubernetes clusters with proper secret management
 
 ---
 
