@@ -48,7 +48,6 @@
 - [API Reference](#api-reference)
 - [Agent Pipeline Details](#agent-pipeline-details)
 - [Knowledge Base](#knowledge-base)
-- [Screenshots](#screenshots)
 - [Challenges and Solutions](#challenges-and-solutions)
 - [Future Improvements](#future-improvements)
 - [Author](#author)
