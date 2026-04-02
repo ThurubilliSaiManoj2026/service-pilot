@@ -126,8 +126,7 @@ reduces this entire lifecycle to **under 30 seconds**.
   Request for Change documents with Risk Assessment, Implementation Plan,
   Rollback Procedure, Stakeholder Approval Matrix, and Communication Plan
 - **PDF Export:** Both RCA and CAB documents export as professionally
-  formatted PDFs (white background, Helvetica headings, Times Roman body,
-  embedded tables) indistinguishable from human-authored reports
+  formatted PDFs
 - **ITIL Knowledge Base:** 100 hand-crafted realistic incident records
   spanning 10 IT domains (Database, Application, Network, Infrastructure,
   Security, Cloud, DevOps, Data Engineering, ML Platform, Identity)
