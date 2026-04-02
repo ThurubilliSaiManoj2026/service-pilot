@@ -174,7 +174,7 @@ reduces this entire lifecycle to **under 30 seconds**.
 
 | Technology | Purpose |
 |---|---|
-| Groq Cloud | LLM inference for LLaMA 3.3 70B (free tier) |
+| Groq Cloud | LLM inference for LLaMA 3.3 70B |
 | BAAI/bge-base-en-v1.5 | Local dense retrieval (no API key required) |
 
 ---
