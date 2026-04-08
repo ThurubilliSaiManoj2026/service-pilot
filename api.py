@@ -46,12 +46,15 @@ app = FastAPI(
 # CORS middleware is essential when your React frontend (running on port 3000
 # or 5173 during development) calls this FastAPI server (running on port 8000).
 # Without CORS, browsers block all cross-origin requests as a security measure.
-# We allow all origins here for development — you would restrict this in
-# production to your specific frontend domain.
+#
+# FIX: allow_credentials=True is INVALID with allow_origins=["*"].
+# Browsers reject this combination per the CORS spec (RFC 6454).
+# Setting allow_credentials=False is the correct production-safe default
+# when using wildcard origins.
 app.add_middleware(
     CORSMiddleware,
     allow_origins     = ["*"],
-    allow_credentials = True,
+    allow_credentials = False,  # ← Fixed: cannot be True with allow_origins=["*"]
     allow_methods     = ["*"],
     allow_headers     = ["*"]
 )
@@ -66,12 +69,12 @@ class IncidentRequest(BaseModel):
 
 class TriageData(BaseModel):
     """Structured triage result returned to the frontend."""
-    severity               : str
-    affected_service       : str
-    category               : str
-    business_impact        : str
-    recommended_team       : str
-    initial_diagnosis      : str
+    severity                 : str
+    affected_service         : str
+    category                 : str
+    business_impact          : str
+    recommended_team         : str
+    initial_diagnosis        : str
     estimated_resolution_time: str
 
 
@@ -126,12 +129,12 @@ async def health_check():
     service is running. Returns the current status of all system components.
     """
     return {
-        "status"          : "healthy",
-        "timestamp"       : datetime.now().isoformat(),
-        "vector_store"    : f"{COLLECTION.count()} incidents loaded",
-        "pipeline"        : "ready",
-        "model"           : "BAAI/bge-base-en-v1.5",
-        "llm"             : "llama-3.3-70b-versatile via Groq"
+        "status"      : "healthy",
+        "timestamp"   : datetime.now().isoformat(),
+        "vector_store": f"{COLLECTION.count()} incidents loaded",
+        "pipeline"    : "ready",
+        "model"       : "BAAI/bge-base-en-v1.5",
+        "llm"         : "llama-3.3-70b-versatile via Groq"
     }
 
 
@@ -247,9 +250,9 @@ async def analyze_incident(request: IncidentRequest):
     start_time = time.time()
 
     try:
-        # Run the complete four-agent pipeline
+        # Run the complete four-agent pipeline.
         # This is the same function called by the Streamlit app — the pipeline
-        # itself is unchanged, only the interface layer (API vs Streamlit) differs
+        # itself is unchanged, only the interface layer (API vs Streamlit) differs.
         state = run_pipeline(description)
 
     except Exception as e:
@@ -264,9 +267,9 @@ async def analyze_incident(request: IncidentRequest):
     triage = state.triage_result
 
     # Extract similar incidents and synthesis from Agent 2's output
-    retrieved  = state.similar_incidents or {}
-    raw_incs   = retrieved.get("retrieved_incidents", [])
-    synthesis  = retrieved.get("synthesis", {})
+    retrieved = state.similar_incidents or {}
+    raw_incs  = retrieved.get("retrieved_incidents", [])
+    synthesis = retrieved.get("synthesis", {})
 
     # Structure similar incidents for the response schema
     similar_incidents_structured = [
@@ -303,13 +306,13 @@ async def analyze_incident(request: IncidentRequest):
         execution_time_sec = execution_time,
         timestamp          = datetime.now().isoformat(),
         triage             = TriageData(
-            severity                 = triage.severity,
-            affected_service         = triage.affected_service,
-            category                 = triage.category,
-            business_impact          = triage.business_impact,
-            recommended_team         = triage.recommended_team,
-            initial_diagnosis        = triage.initial_diagnosis,
-            estimated_resolution_time= triage.estimated_resolution_time
+            severity                  = triage.severity,
+            affected_service          = triage.affected_service,
+            category                  = triage.category,
+            business_impact           = triage.business_impact,
+            recommended_team          = triage.recommended_team,
+            initial_diagnosis         = triage.initial_diagnosis,
+            estimated_resolution_time = triage.estimated_resolution_time
         ),
         similar_incidents  = similar_incidents_structured,
         synthesis          = synthesis_structured,
@@ -327,5 +330,5 @@ if __name__ == "__main__":
         "api:app",
         host   = "0.0.0.0",
         port   = port,
-        reload = False
+        reload = False   # Always False in production — reload causes double-init
     )
