@@ -20,6 +20,7 @@
 
 import os
 import logging
+from typing import Optional
 
 # Suppress ChromaDB telemetry warnings completely
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
@@ -39,8 +40,8 @@ from utils.chroma_utils       import initialize_vector_store
 # loading the BGE model and connecting to the persistent store takes 2-3
 # seconds. By doing it once at startup and passing the collection object
 # into the graph, every subsequent pipeline run is instantaneous for the
-# retrieval step — the collection object stays in memory between Streamlit
-# interactions without reloading from disk each time.
+# retrieval step — the collection object stays in memory between requests
+# without reloading from disk each time.
 
 print("[ServicePilot] Initializing vector store for pipeline...")
 COLLECTION = initialize_vector_store()
@@ -109,29 +110,51 @@ def build_pipeline() -> StateGraph:
     graph.add_node("rca",        rca_node)
     graph.add_node("cab",        cab_node)
 
-    # Define the execution order with directed edges
+    # Define the execution order with directed edges.
     # These edges form the pipeline: each agent's output becomes the next
-    # agent's input through the shared ServicePilotState object
-    graph.set_entry_point("triage")        # Pipeline starts at triage
+    # agent's input through the shared ServicePilotState object.
+    graph.set_entry_point("triage")          # Pipeline starts at triage
     graph.add_edge("triage",     "resolution")
     graph.add_edge("resolution", "rca")
     graph.add_edge("rca",        "cab")
-    graph.add_edge("cab",        END)      # Pipeline ends after CAB document
+    graph.add_edge("cab",        END)        # Pipeline ends after CAB document
 
-    # Compile the graph into an executable runnable
-    # After compilation, the graph can be invoked with .invoke(initial_state)
+    # Compile the graph into an executable runnable.
+    # After compilation, the graph can be invoked with .invoke(initial_state).
     return graph.compile()
 
 
-# ── The main pipeline function called by the Streamlit app ───────────────────
+# ── Module-level pipeline cache ───────────────────────────────────────────────
+# FIX: build_pipeline() was previously called inside run_pipeline(), meaning
+# the entire graph was recompiled on every single API request. Compilation is
+# a pure setup step — the graph topology never changes between requests.
+# Caching the compiled pipeline at module level means it is built exactly once
+# at startup and reused for every subsequent call, eliminating unnecessary
+# overhead on every /api/analyze request.
+
+_PIPELINE: Optional[StateGraph] = None
+
+
+def _get_pipeline() -> StateGraph:
+    """
+    Returns the compiled pipeline, building it once on first call
+    and reusing the cached instance on all subsequent calls.
+    """
+    global _PIPELINE
+    if _PIPELINE is None:
+        _PIPELINE = build_pipeline()
+    return _PIPELINE
+
+
+# ── The main pipeline function called by api.py ───────────────────────────────
 
 def run_pipeline(incident_description: str) -> ServicePilotState:
     """
     Runs the complete four-agent pipeline for a given incident description.
 
-    This is the single function that the Streamlit UI calls. It takes the
-    raw incident text, creates the initial state, invokes the compiled graph,
-    and returns the fully populated state with all four agent outputs.
+    This is the single function that api.py calls. It takes the raw incident
+    text, creates the initial state, invokes the compiled graph, and returns
+    the fully populated state with all four agent outputs.
 
     Args:
         incident_description: The raw incident text entered by the user.
@@ -144,16 +167,17 @@ def run_pipeline(incident_description: str) -> ServicePilotState:
             - cab_document         → Agent 4 output
     """
 
-    pipeline = build_pipeline()
+    # Retrieve the cached compiled pipeline (built once at first call)
+    pipeline = _get_pipeline()
 
     initial_state = ServicePilotState(
         incident_description = incident_description
     )
 
-    # .invoke() runs the entire graph synchronously and returns the final state
-    # LangGraph handles the node-to-node state passing internally
+    # .invoke() runs the entire graph synchronously and returns the final state.
+    # LangGraph handles the node-to-node state passing internally.
     final_state = pipeline.invoke(initial_state)
 
     # LangGraph returns a dict when invoked — convert back to ServicePilotState
-    # so the Streamlit app can access fields with dot notation (state.triage_result)
+    # so the caller can access fields with dot notation (state.triage_result).
     return ServicePilotState(**final_state)

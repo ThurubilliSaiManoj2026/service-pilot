@@ -17,14 +17,13 @@ chromadb==0.6.3
 sentence-transformers==3.4.1   # Local embedding model, no API key needed
 
 # ─────────────────────────────────────────────
-# Frontend UI
+# API Server (Production)
 # ─────────────────────────────────────────────
-streamlit==1.44.1
+fastapi==0.115.6
+uvicorn==0.34.0
 
 # ─────────────────────────────────────────────
 # Utilities
 # ─────────────────────────────────────────────
 python-dotenv==1.1.0           # Loads .env variables into the environment
 pydantic==2.11.3               # Data validation for structured agent outputs
-fastapi==0.115.6
-uvicorn==0.34.0
