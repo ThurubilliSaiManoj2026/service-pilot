@@ -25,3 +25,6 @@ Thumbs.db
 
 # IDE files
 .vscode/settings.json
+
+# Temporary audit files created during pre-deployment review
+*_audit.txt

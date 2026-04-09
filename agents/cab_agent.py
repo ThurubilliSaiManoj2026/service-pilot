@@ -91,25 +91,25 @@ def run_cab_agent(state: ServicePilotState) -> ServicePilotState:
 
     print("\n[CAB Agent] Generating Change Advisory Board document...")
 
-    triage   = state.triage_result
-    retrieved = state.similar_incidents
+    triage    = state.triage_result
+    retrieved = state.similar_incidents or {}
     synthesis = retrieved.get("synthesis", {})
     rca       = state.rca_report
 
-    # Calculate realistic CAB meeting and implementation dates
-    # CAB meetings typically happen weekly — we schedule for next week
-    today         = datetime.now()
-    cab_date      = (today + timedelta(days=7)).strftime("%Y-%m-%d")
-    impl_date     = (today + timedelta(days=10)).strftime("%Y-%m-%d")
-    review_date   = (today + timedelta(days=17)).strftime("%Y-%m-%d")
+    # Calculate realistic CAB meeting and implementation dates.
+    # CAB meetings typically happen weekly — we schedule for next week.
+    today       = datetime.now()
+    cab_date    = (today + timedelta(days=7)).strftime("%Y-%m-%d")
+    impl_date   = (today + timedelta(days=10)).strftime("%Y-%m-%d")
+    review_date = (today + timedelta(days=17)).strftime("%Y-%m-%d")
 
     # Extract resolution steps from Agent 2 synthesis for the implementation plan
     resolution_steps = synthesis.get("recommended_steps", [])
     steps_text       = "\n".join(resolution_steps) if resolution_steps else "See RCA report."
 
-    # Determine change type based on severity
-    # P1 incidents that have already been resolved typically require Normal Change
-    # for the permanent preventive measures, since the emergency fix is already done
+    # Determine change type based on severity.
+    # P1/P2 incidents that have already been resolved typically require Normal Change
+    # for the permanent preventive measures, since the emergency fix is already done.
     change_type = "Normal Change" if triage.severity in ["P1", "P2"] else "Standard Change"
 
     llm = ChatGroq(
@@ -125,18 +125,18 @@ following post-incident change. This change is being proposed to permanently pre
 recurrence of the incident described below.
 
 === SOURCE INCIDENT ===
-Description  : {state.incident_description}
-Severity     : {triage.severity}
-Affected     : {triage.affected_service}
-Category     : {triage.category}
+Description    : {state.incident_description}
+Severity       : {triage.severity}
+Affected       : {triage.affected_service}
+Category       : {triage.category}
 Business Impact: {triage.business_impact}
-Change Type  : {change_type}
+Change Type    : {change_type}
 
 === ROOT CAUSE (from RCA) ===
-Initial Diagnosis: {triage.initial_diagnosis}
+Initial Diagnosis        : {triage.initial_diagnosis}
 Primary Reference Incident: {synthesis.get('primary_reference', 'N/A')}
-Confidence: {synthesis.get('confidence_level', 'N/A')}
-Key Differences: {synthesis.get('key_differences', 'N/A')}
+Confidence               : {synthesis.get('confidence_level', 'N/A')}
+Key Differences          : {synthesis.get('key_differences', 'N/A')}
 
 === RESOLUTION STEPS ALREADY APPLIED (emergency fix) ===
 {steps_text}
@@ -218,10 +218,8 @@ if __name__ == "__main__":
     print("   CAB Agent — Standalone Validation (Full Pipeline Run)")
     print("=" * 65)
 
-    # Initialize the vector store
     collection = initialize_vector_store()
 
-    # The test incident — same one used across all agents for consistency
     incident = (
         "Production Kubernetes cluster has multiple pods in CrashLoopBackOff "
         "state. The payment processing service is completely down. All three "
@@ -231,14 +229,13 @@ if __name__ == "__main__":
         "is approximately Rs 2 lakhs per hour."
     )
 
-    # Run the complete pipeline sequentially — Agent 1 → 2 → 3 → 4
     print("\n[Pipeline] Running all four agents in sequence...\n")
 
     state = ServicePilotState(incident_description=incident)
-    state = run_triage_agent(state)          # Agent 1
-    state = run_resolution_agent(state, collection)  # Agent 2
-    state = run_rca_agent(state)             # Agent 3
-    state = run_cab_agent(state)             # Agent 4
+    state = run_triage_agent(state)                      # Agent 1
+    state = run_resolution_agent(state, collection)      # Agent 2
+    state = run_rca_agent(state)                         # Agent 3
+    state = run_cab_agent(state)                         # Agent 4
 
     print(f"\n{'=' * 65}")
     print("   COMPLETE PIPELINE RESULTS")
@@ -252,16 +249,13 @@ if __name__ == "__main__":
     print(f"  Impact   : {t.business_impact}")
 
     print(f"\n--- SIMILAR INCIDENTS (Agent 2) ---")
-    for i, inc in enumerate(
-        state.similar_incidents["retrieved_incidents"], start=1
-    ):
+    for i, inc in enumerate(state.similar_incidents["retrieved_incidents"], start=1):
         print(f"  {i}. [{inc['incident_id']}] {inc['title']} "
               f"({inc['similarity_score']}%)")
 
     print(f"\n--- RCA REPORT (Agent 3) ---")
     print(f"  Length: {len(state.rca_report.split())} words")
-    # Print just the executive summary section
-    rca_lines = state.rca_report.split("\n")
+    rca_lines  = state.rca_report.split("\n")
     in_summary = False
     for line in rca_lines:
         if "EXECUTIVE SUMMARY" in line:
@@ -273,9 +267,8 @@ if __name__ == "__main__":
 
     print(f"\n--- CAB DOCUMENT (Agent 4) ---")
     print(f"  Length: {len(state.cab_document.split())} words")
-    # Print just the header section of the CAB document
     cab_lines = state.cab_document.split("\n")
-    for j, line in enumerate(cab_lines[:25]):
+    for line in cab_lines[:25]:
         if line.strip():
             print(f"  {line}")
 

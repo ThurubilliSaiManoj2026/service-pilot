@@ -39,9 +39,13 @@ import chromadb
 from sentence_transformers import SentenceTransformer
 
 # ── Configuration ─────────────────────────────────────────────────────────────
+# FIX: Use absolute paths derived from this file's location so the code works
+# correctly regardless of which directory Python is invoked from — locally,
+# on Render, or in any other deployment environment.
 
-INCIDENTS_FILE  = "data/incidents.json"
-CHROMA_DB_PATH  = "vectorstore"
+BASE_DIR        = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+INCIDENTS_FILE  = os.path.join(BASE_DIR, "data", "incidents.json")
+CHROMA_DB_PATH  = os.path.join(BASE_DIR, "vectorstore")
 COLLECTION_NAME = "itil_incidents"
 
 # BGE-Base: 768-dimensional dense retrieval model.
@@ -70,14 +74,21 @@ def initialize_vector_store() -> chromadb.Collection:
     On all subsequent runs: loads the existing collection in under 2 seconds.
     """
     print("[VectorStore] Connecting to persistent store...")
-    client   = chromadb.PersistentClient(path=CHROMA_DB_PATH)
-    existing = client.list_collections()
+    client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
 
-    if COLLECTION_NAME in existing:
-        print("[VectorStore] Collection found — loading from disk...")
+    # FIX: The previous code used `client.list_collections()` and checked
+    # `if COLLECTION_NAME in existing` — this comparison was unreliable across
+    # ChromaDB versions (objects vs strings). The correct production-safe
+    # pattern is to attempt get_collection() and catch the exception if it
+    # doesn't exist yet. This works correctly in all ChromaDB 0.4.x–0.6.x.
+    try:
         collection = client.get_collection(name=COLLECTION_NAME)
+        print(f"[VectorStore] Collection found — loading from disk...")
         print(f"[VectorStore] ✓ {collection.count()} incidents ready.\n")
         return collection
+    except Exception:
+        # Collection does not exist yet — fall through to first-time ingestion
+        pass
 
     # ── First-time ingestion ──────────────────────────────────────────────────
 

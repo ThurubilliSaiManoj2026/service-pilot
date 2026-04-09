@@ -13,6 +13,13 @@ import {
   Activity, Database, Server, Lock
 } from "lucide-react";
 
+// ── Production API base URL ───────────────────────────────────────────────────
+// In local dev: VITE_API_BASE_URL is undefined → empty string → vite proxy
+// handles /api/* → http://localhost:8000 (configured in vite.config.js).
+// In production (Vercel): set VITE_API_BASE_URL=https://your-app.onrender.com
+// in the Vercel dashboard environment variables so axios hits the Render backend.
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+
 const SEV = {
   P1: { color:"text-red-500",    bg:"bg-red-50",    border:"border-red-200",    dot:"bg-red-500"    },
   P2: { color:"text-orange-500", bg:"bg-orange-50", border:"border-orange-200", dot:"bg-orange-500" },
@@ -263,7 +270,9 @@ function DocumentRenderer({ blocks }) {
   );
 }
 
-// generatePDF — Produces a clean, professional corporate-style PDF.
+// ─────────────────────────────────────────────────────────────────────────────
+// PDF GENERATOR
+// Produces a clean, professional corporate-style PDF.
 // Design principles:
 //   - White background throughout, no colors anywhere
 //   - Headings: Helvetica Bold, black, with a simple underline rule
@@ -272,36 +281,29 @@ function DocumentRenderer({ blocks }) {
 //   - Pagination: headings are never orphaned at the bottom of a page
 //     (we require 35mm of remaining space before placing a heading)
 //   - No footer text on any page
+// ─────────────────────────────────────────────────────────────────────────────
 function generatePDF(blocks, documentTitle, incidentDescription) {
   const doc   = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
-  const marginLeft  = 20;
-  const marginRight = 20;
-  const marginTop   = 20;
-  const marginBottom= 20;
-  const maxW        = pageW - marginLeft - marginRight;
-  let   y           = marginTop;
+  const marginLeft   = 20;
+  const marginRight  = 20;
+  const marginTop    = 20;
+  const marginBottom = 20;
+  const maxW         = pageW - marginLeft - marginRight;
+  let   y            = marginTop;
 
   // ── Page overflow helper ──────────────────────────────────────────────────
-  // Returns true if adding `needed` mm of content would overflow the page.
   const willOverflow = (needed) => y + needed > pageH - marginBottom;
-
-  // Adds a new page and resets the y cursor to the top margin.
-  const newPage = () => {
-    doc.addPage();
-    y = marginTop;
-  };
+  const newPage = () => { doc.addPage(); y = marginTop; };
 
   // ── Document title ────────────────────────────────────────────────────────
-  // We always have room for the title on the first page because y = marginTop.
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
   doc.setTextColor(0, 0, 0);
   doc.text(documentTitle, marginLeft, y);
   y += 7;
 
-  // Thin rule under the title
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.4);
   doc.line(marginLeft, y, pageW - marginRight, y);
@@ -319,18 +321,16 @@ function generatePDF(blocks, documentTitle, incidentDescription) {
       doc.text(line, marginLeft, y);
       y += 5;
     });
-    y += 5; // breathing room after the summary
+    y += 5;
   }
 
   // ── Render content blocks ─────────────────────────────────────────────────
   blocks.forEach(block => {
 
-    // HEADING — major section (from === HEADING === markers)
-    // Orphan protection: require 35mm so the heading + at least 3 body lines
-    // always share the same page. If less than 35mm remains, start a new page.
+    // HEADING — orphan protection: require 35mm before placing
     if (block.type === "heading") {
       if (willOverflow(35)) newPage();
-      else y += 6; // extra spacing before headings mid-page
+      else y += 6;
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
@@ -338,16 +338,14 @@ function generatePDF(blocks, documentTitle, incidentDescription) {
       doc.text(block.content.toUpperCase(), marginLeft, y);
       y += 2;
 
-      // Underline beneath the heading
       doc.setDrawColor(0, 0, 0);
       doc.setLineWidth(0.25);
       doc.line(marginLeft, y, pageW - marginRight, y);
       y += 5;
     }
 
-    // SUBHEADING — bold label within a section
+    // SUBHEADING — require 20mm before placing
     else if (block.type === "subheading") {
-      // Require 20mm — heading + at least 2 body lines
       if (willOverflow(20)) newPage();
       else y += 3;
 
@@ -370,30 +368,24 @@ function generatePDF(blocks, documentTitle, incidentDescription) {
         doc.text(line, marginLeft, y);
         y += 5;
       });
-      y += 2; // small gap after a paragraph
+      y += 2;
     }
 
-    // LIST — numbered list items in Times Roman
+    // LIST — numbered items, each treated atomically
     else if (block.type === "list") {
       doc.setFontSize(10);
       doc.setTextColor(0, 0, 0);
 
       block.items.forEach((item, i) => {
-        const itemLines = doc.splitTextToSize(item, maxW - 8);
-
-        // Treat each list item atomically — don't split a single item
-        // across pages if we can avoid it. Check if the whole item fits.
+        const itemLines  = doc.splitTextToSize(item, maxW - 8);
         const itemHeight = itemLines.length * 5 + 2;
         if (willOverflow(itemHeight)) newPage();
 
-        // Number in bold, content in normal weight
         doc.setFont("helvetica", "bold");
         doc.text(`${i + 1}.`, marginLeft, y);
         doc.setFont("times", "normal");
 
         itemLines.forEach((line, li) => {
-          // If it is a very long item and we are mid-way through it,
-          // still check for overflow on each sub-line.
           if (li > 0 && willOverflow(5)) newPage();
           doc.text(line, marginLeft + 7, y);
           y += 5;
@@ -403,9 +395,8 @@ function generatePDF(blocks, documentTitle, incidentDescription) {
       y += 2;
     }
 
-    // TABLE — minimal style with light gray header, no colored fills
+    // TABLE — minimal style, light gray header, no color fills
     else if (block.type === "table") {
-      // Give the table at least 25mm of space to start; if not, push to new page.
       if (willOverflow(25)) newPage();
 
       autoTable(doc, {
@@ -414,7 +405,7 @@ function generatePDF(blocks, documentTitle, incidentDescription) {
         body:   block.rows,
         margin: { left: marginLeft, right: marginRight },
         headStyles: {
-          fillColor:   [230, 230, 230],  // light gray — professional, not colorful
+          fillColor:   [230, 230, 230],
           textColor:   [0, 0, 0],
           fontStyle:   "bold",
           font:        "helvetica",
@@ -427,28 +418,21 @@ function generatePDF(blocks, documentTitle, incidentDescription) {
           textColor:   [0, 0, 0],
           font:        "times",
         },
-        alternateRowStyles: {
-          fillColor: [248, 248, 248],    // very subtle alternating row tint
-        },
+        alternateRowStyles: { fillColor: [248, 248, 248] },
         tableLineColor: [180, 180, 180],
         tableLineWidth: 0.2,
         styles: {
-          overflow:    "linebreak",
-          lineColor:   [180, 180, 180],
-          lineWidth:   0.1,
+          overflow:  "linebreak",
+          lineColor: [180, 180, 180],
+          lineWidth: 0.1,
         },
-        // After autoTable draws a page, update our y cursor.
-        didDrawPage: (data) => {
-          y = data.cursor.y + 6;
-        },
+        didDrawPage: (data) => { y = data.cursor.y + 6; },
       });
 
-      // Sync y with where autoTable finished
       y = (doc.lastAutoTable?.finalY || y) + 8;
     }
   });
 
-  // Save — no footer text is added anywhere in this function.
   doc.save(`${documentTitle.replace(/\s+/g, "_")}_${new Date().toISOString().slice(0, 10)}.pdf`);
 }
 
@@ -711,11 +695,11 @@ function SolutionsSection() {
               </p>
               <div className="space-y-3">
                 {[
-                  { label:"LLaMA 3.3 70B via Groq",    icon:Zap,         color:"#fbbf24" },
-                  { label:"BAAI/BGE-Base Embeddings",  icon:Brain,       color:"#60a5fa" },
-                  { label:"ChromaDB Vector Store",     icon:Database,    color:"#a78bfa" },
-                  { label:"100-Incident Knowledge Base",icon:Server,     color:"#86efac" },
-                  { label:"FastAPI + React Frontend",  icon:Activity,    color:"#f87171" },
+                  { label:"LLaMA 3.3 70B via Groq",     icon:Zap,      color:"#fbbf24" },
+                  { label:"BAAI/BGE-Base Embeddings",   icon:Brain,    color:"#60a5fa" },
+                  { label:"ChromaDB Vector Store",      icon:Database, color:"#a78bfa" },
+                  { label:"100-Incident Knowledge Base",icon:Server,   color:"#86efac" },
+                  { label:"FastAPI + React Frontend",   icon:Activity, color:"#f87171" },
                 ].map((tech,i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background:"rgba(255,255,255,0.06)" }}>
@@ -806,17 +790,23 @@ function AnalyzerModal({ onClose }) {
   const [expandedInc, setExpandedInc] = useState(null);
 
   useEffect(() => {
-    axios.get("/api/examples").then(r => setExamples(r.data.examples)).catch(() => {});
+    // FIX: prepend API_BASE so this works in both local dev and production
+    axios.get(`${API_BASE}/api/examples`)
+      .then(r => setExamples(r.data.examples))
+      .catch(() => {});
   }, []);
 
   const handleAnalyze = async () => {
     if (!description.trim() || description.trim().length < 20) return;
     setIsLoading(true); setResult(null); setError(null);
     try {
-      const r = await axios.post("/api/analyze", { incident_description: description.trim() });
+      // FIX: prepend API_BASE so this works in both local dev and production
+      const r = await axios.post(`${API_BASE}/api/analyze`, {
+        incident_description: description.trim(),
+      });
       setResult(r.data); setActiveTab(0);
     } catch(e) {
-      setError(e.response?.data?.detail || "Pipeline failed. Ensure the API server is running on port 8000.");
+      setError(e.response?.data?.detail || "Pipeline failed. Ensure the API server is running.");
     } finally {
       setIsLoading(false);
     }
@@ -915,8 +905,6 @@ function AnalyzerModal({ onClose }) {
 
         {/* Results */}
         {result && !isLoading && (() => {
-          // Parse both documents once so the same parsed data is
-          // used for both rendering and PDF generation
           const rcaBlocks = parseDocument(result.rca_report);
           const cabBlocks = parseDocument(result.cab_document);
 
@@ -939,10 +927,10 @@ function AnalyzerModal({ onClose }) {
               {/* Metrics row */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                 {[
-                  { label:"Severity",   value:result.triage.severity, color:SEV[result.triage.severity]?.color||"text-gray-300" },
-                  { label:"Category",  value:result.triage.category, color:"text-blue-400" },
-                  { label:"Resolution",value:result.triage.estimated_resolution_time.split(",")[0], color:"text-cyan-400" },
-                  { label:"Confidence",value:result.synthesis.confidence_level, color:"text-green-400" },
+                  { label:"Severity",   value:result.triage.severity,                                    color:SEV[result.triage.severity]?.color||"text-gray-300" },
+                  { label:"Category",   value:result.triage.category,                                    color:"text-blue-400"  },
+                  { label:"Resolution", value:result.triage.estimated_resolution_time.split(",")[0],     color:"text-cyan-400"  },
+                  { label:"Confidence", value:result.synthesis.confidence_level,                         color:"text-green-400" },
                 ].map((m,i) => (
                   <div key={i} className="rounded-xl p-4 text-center"
                     style={{ background:"#1e293b", border:"1px solid #334155" }}>
@@ -1064,13 +1052,11 @@ function AnalyzerModal({ onClose }) {
               {/* ── TAB 2: RCA Report — fully formatted ── */}
               {activeTab===2 && (
                 <div>
-                  {/* Toolbar */}
                   <div className="flex items-center justify-between mb-5">
                     <div>
                       <span className="text-white font-semibold text-sm">Root Cause Analysis Report</span>
                       <span className="text-gray-500 text-xs ml-3">{result.rca_report.split(" ").length} words</span>
                     </div>
-                    {/* PDF download — generates a proper structured PDF */}
                     <button
                       onClick={() => generatePDF(rcaBlocks, "Root Cause Analysis Report", description)}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium"
@@ -1079,8 +1065,6 @@ function AnalyzerModal({ onClose }) {
                       <Download size={13} /> Download PDF
                     </button>
                   </div>
-
-                  {/* Formatted document body */}
                   <div className="rounded-xl p-8" style={{ background:"#1e293b", border:"1px solid #334155" }}>
                     <DocumentRenderer blocks={rcaBlocks} />
                   </div>
@@ -1090,13 +1074,11 @@ function AnalyzerModal({ onClose }) {
               {/* ── TAB 3: CAB RFC — fully formatted ── */}
               {activeTab===3 && (
                 <div>
-                  {/* Toolbar */}
                   <div className="flex items-center justify-between mb-5">
                     <div>
                       <span className="text-white font-semibold text-sm">Change Advisory Board — Request for Change</span>
                       <span className="text-gray-500 text-xs ml-3">{result.cab_document.split(" ").length} words</span>
                     </div>
-                    {/* PDF download */}
                     <button
                       onClick={() => generatePDF(cabBlocks, "CAB Request for Change", description)}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium"
@@ -1105,8 +1087,6 @@ function AnalyzerModal({ onClose }) {
                       <Download size={13} /> Download PDF
                     </button>
                   </div>
-
-                  {/* Formatted document body */}
                   <div className="rounded-xl p-8" style={{ background:"#1e293b", border:"1px solid #334155" }}>
                     <DocumentRenderer blocks={cabBlocks} />
                   </div>
