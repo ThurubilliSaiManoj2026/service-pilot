@@ -53,4 +53,7 @@ RUN python -c "from utils.chroma_utils import initialize_vector_store; \
 
 # ── Start the FastAPI server ──────────────────────────────────────────────────
 # api.py reads PORT from environment → binds to 7860 on HF Spaces automatically
+# Force PORT=7860 for HuggingFace Spaces
+ENV PORT=7860
+
 CMD ["python", "api.py"]
