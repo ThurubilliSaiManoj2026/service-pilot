@@ -1,0 +1,8 @@
+{
+    "rewrites": [
+      {
+        "source": "/api/:path*",
+        "destination": "https://manoj2026-service-pilot-api.hf.space/api/:path*"
+      }
+    ]
+  }

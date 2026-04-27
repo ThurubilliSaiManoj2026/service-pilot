@@ -1,6 +1,6 @@
 // App.jsx — ServicePilot Final Version
 // White SaaS design + formatted RCA/CAB rendering + PDF export
-
+const API_BASE = import.meta.env.VITE_API_URL || "";
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
