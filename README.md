@@ -1,12 +1,3 @@
----
-title: Service Pilot API
-emoji: 🚀
-colorFrom: green
-colorTo: blue
-sdk: docker
-pinned: false
----
-
 <div align="center">
 
 <img src="https://img.shields.io/badge/Python-3.12-blue?style=for-the-badge&logo=python&logoColor=white" />
