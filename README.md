@@ -102,7 +102,7 @@ reduces this entire lifecycle to **under 30 seconds**.
 2. Demonstrate production-grade multi-agent LLM orchestration using LangGraph
 3. Implement semantic vector search using BGE-Base dense retrieval embeddings
 4. Build a domain-specific knowledge base of 100 realistic ITIL incident records
-5. Produce structured, client-deliverable ITIL documents (RCA, CAB RFC)
+5. Produce structured, client deliverable ITIL documents (RCA, CAB RFC)
 6. Expose the pipeline through a production-ready FastAPI REST interface
 7. Deliver a polished React frontend with professional SaaS design
 
