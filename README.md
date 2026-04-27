@@ -61,7 +61,7 @@ designed to solve a problem that every IT service company like TCS, Accenture, C
 
 This project was built as a portfolio-grade demonstration of real-world AI
 engineering — combining LLM orchestration, semantic vector search, REST API
-design, and a production-quality React frontend into a single cohesive system
+design, and a production quality React frontend into a single cohesive system
 that mirrors how enterprise ITSM automation is actually architected.
 
 **What makes ServicePilot different from a generic chatbot:**
