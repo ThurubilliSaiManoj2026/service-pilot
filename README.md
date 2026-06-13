@@ -566,7 +566,7 @@ actually produces.
 
 **Thurubilli Sai Manoj**
 
-B.Tech Computer Science Engineering (AI/ML Specialization)
+B.Tech Computer Science Engineering (AI/ML)
 
 - LinkedIn: https://www.linkedin.com/in/thurubilli-sai-manoj-96012b31a
 
